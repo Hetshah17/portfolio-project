@@ -53,7 +53,8 @@ const Scene = () => {
       let progress = setProgress((value) => setLoading(value));
       const { loadCharacter } = setCharacter(renderer, scene, camera);
 
-      loadCharacter().then((gltf) => {
+      loadCharacter()
+        .then((gltf) => {
         if (gltf) {
           const animations = setAnimations(gltf);
           hoverDivRef.current && animations.hover(gltf, hoverDivRef.current);
@@ -73,7 +74,13 @@ const Scene = () => {
             handleResize(renderer, camera, canvasDiv, character)
           );
         }
-      });
+        })
+        .catch((err) => {
+          // If 3D assets fail to load (e.g., 404 on GitHub Pages),
+          // still complete the loading UI so the rest of the site can render.
+          console.error("Character load failed:", err);
+          progress.clear();
+        });
 
       let mouse = { x: 0, y: 0 },
         interpolation = { x: 0.1, y: 0.2 };
