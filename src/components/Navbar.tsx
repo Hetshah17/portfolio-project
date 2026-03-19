@@ -5,7 +5,13 @@ import { gsap } from "gsap";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
 import "./styles/Navbar.css";
 
-gsap.registerPlugin(ScrollSmoother, ScrollTrigger);
+// Some environments may not have ScrollSmoother bundled/available.
+// Guard plugin registration so the app still renders instead of going black-screen.
+try {
+  gsap.registerPlugin(ScrollSmoother, ScrollTrigger);
+} catch (e) {
+  console.error("GSAP ScrollSmoother registration failed:", e);
+}
 export let smoother: ScrollSmoother | undefined;
 
 const Navbar = () => {
