@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import "./styles/Work.css";
 import { MdArrowBack, MdArrowForward } from "react-icons/md";
 
@@ -105,6 +105,9 @@ const projects: Project[] = [
 const Work = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const slideCount = useMemo(() => projects.length, []);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
   const goToSlide = useCallback(
     (index: number) => {
@@ -127,6 +130,16 @@ const Work = () => {
       currentIndex === projects.length - 1 ? 0 : currentIndex + 1;
     goToSlide(newIndex);
   }, [currentIndex, goToSlide]);
+
+  const goToPrevTouch = useCallback(() => {
+    if (currentIndex === 0) goToSlide(slideCount - 1);
+    else goToSlide(currentIndex - 1);
+  }, [currentIndex, goToSlide, slideCount]);
+
+  const goToNextTouch = useCallback(() => {
+    if (currentIndex === slideCount - 1) goToSlide(0);
+    else goToSlide(currentIndex + 1);
+  }, [currentIndex, goToSlide, slideCount]);
 
   return (
     <div className="work-section" id="work">
@@ -155,11 +168,34 @@ const Work = () => {
           </button>
 
           {/* Slides */}
-          <div className="carousel-track-container">
+          <div
+            className="carousel-track-container"
+            onTouchStart={(e) => {
+              const t = e.touches[0];
+              touchStartX.current = t.clientX;
+              touchStartY.current = t.clientY;
+            }}
+            onTouchEnd={(e) => {
+              if (touchStartX.current === null || touchStartY.current === null) return;
+              const t = e.changedTouches[0];
+              const dx = t.clientX - touchStartX.current;
+              const dy = t.clientY - touchStartY.current;
+              touchStartX.current = null;
+              touchStartY.current = null;
+
+              // Only treat as a slide change if it's mostly horizontal
+              if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)) return;
+              if (dx < 0) goToNextTouch();
+              else goToPrevTouch();
+            }}
+          >
             <div
               className="carousel-track"
               style={{
-                transform: `translateX(-${currentIndex * 100}%)`,
+                // `translateX(%)` is based on the track width, which equals
+                // "slideCount * containerWidth". So we must translate by only
+                // 1/slideCount of that width per slide to prevent overlap on mobile.
+                transform: `translate3d(-${(currentIndex * 100) / slideCount}%, 0, 0)`,
               }}
             >
               {projects.map((project, index) => (

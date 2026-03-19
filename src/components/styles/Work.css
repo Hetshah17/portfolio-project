@@ -32,6 +32,8 @@
   width: 100%;
   border-top: 1px solid #363636;
   border-bottom: 1px solid #363636;
+  /* Allow vertical scrolling while still capturing horizontal swipe gestures */
+  touch-action: pan-y;
 }
 
 .carousel-track {
