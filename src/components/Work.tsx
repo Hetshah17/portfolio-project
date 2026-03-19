@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./styles/Work.css";
 import { MdArrowBack, MdArrowForward } from "react-icons/md";
 
@@ -106,8 +106,27 @@ const Work = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const slideCount = useMemo(() => projects.length, []);
+  const trackContainerRef = useRef<HTMLDivElement | null>(null);
+  const [trackContainerWidth, setTrackContainerWidth] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+
+  useEffect(() => {
+    const el = trackContainerRef.current;
+    if (!el) return;
+
+    const update = () => setTrackContainerWidth(el.clientWidth);
+    update();
+
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(() => update());
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   const goToSlide = useCallback(
     (index: number) => {
@@ -170,6 +189,7 @@ const Work = () => {
           {/* Slides */}
           <div
             className="carousel-track-container"
+            ref={trackContainerRef}
             onTouchStart={(e) => {
               const t = e.touches[0];
               touchStartX.current = t.clientX;
@@ -192,10 +212,7 @@ const Work = () => {
             <div
               className="carousel-track"
               style={{
-                // `translateX(%)` is based on the track width, which equals
-                // "slideCount * containerWidth". So we must translate by only
-                // 1/slideCount of that width per slide to prevent overlap on mobile.
-                transform: `translate3d(-${(currentIndex * 100) / slideCount}%, 0, 0)`,
+                transform: `translate3d(${-currentIndex * trackContainerWidth}px, 0, 0)`,
               }}
             >
               {projects.map((project, index) => (
