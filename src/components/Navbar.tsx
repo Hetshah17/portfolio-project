@@ -38,7 +38,7 @@ const Navbar = () => {
           e.preventDefault();
           let elem = e.currentTarget as HTMLAnchorElement;
           let section = elem.getAttribute("data-href");
-          if (smoother) {
+          if (smoother && section) {
             smoother.scrollTo(section, true, "top top");
           } else if (section) {
             document.querySelector(section)?.scrollIntoView({ behavior: "smooth" });
